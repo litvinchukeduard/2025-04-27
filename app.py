@@ -1,5 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from json import dumps
+from datetime import datetime
 
 import redis
 from pymongo import MongoClient
@@ -34,12 +35,12 @@ mongo_client = MongoClient(CONNECTION_STRING)
 mongo_db = mongo_client['website_visitors']
 visitors_collection = mongo_db['visitors']
 
-item_1 = {
-    "ip": "192.168.0.1",
-    "timestamp": "2025.04.27 20:18"
-}
+# item_1 = {
+#     "ip": "192.168.0.1",
+#     "timestamp": "2025.04.27 20:18"
+# }
 
-visitors_collection.insert_one(item_1)
+# visitors_collection.insert_one(item_1)
 # visitors_count = 0
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -52,9 +53,31 @@ class RequestHandler(BaseHTTPRequestHandler):
         # visitors_count += 1
         visitors_count = redis_connection.incr("visitors_count", amount=1)
 
+        # client_ip = self.client_address[0]
+        # current_timestamp = str(datetime.now())
+
+        # user_info = {
+        #     "ip": self.client_address[0],
+        #     "timestamp": str(datetime.now())
+        # }
+
+        # visitors_collection.insert_one(user_info)
+
+        visitors_collection.insert_one({
+            "ip": self.client_address[0],
+            "timestamp": str(datetime.now())
+        })
+
+        visitors_cursor = visitors_collection.find().limit(5)
+        visitors_info = ""
+        for visitor in visitors_cursor:
+            visitors_info += f"<p>IP: {visitor['ip']} TIMESTAMP: {visitor['timestamp']}<p>"
+
         response = f"""
             <h2>Welcome to our website!</h2>
             <p>Number of visitors is <b>{visitors_count}</b>!</p>
+            <h3>Latest Visitors:</h3>
+            {visitors_info}
         """
         self.send_response(200)
         self.send_header("Content-type", "text/html")
