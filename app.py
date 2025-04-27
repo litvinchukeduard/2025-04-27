@@ -2,11 +2,23 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from json import dumps
 
 import redis
+from pymongo import MongoClient
 '''
 Написати додаток-вебсайт, який:
 
     1) Рахувати кількість відвідувачів
     2) Виводити декілька останніх відвідувачів
+        2.1) Зберігати поточного відвідувача
+        2.2) Діставати певну кількість відвідувачів
+
+
+ip_address: 192.168.0.1
+timestamp: 2025.04.27 20:18
+
+{
+    "ip": "192.168.0.1",
+    "timestamp": "2025.04.27 20:18"
+}
 
 http server
 
@@ -17,6 +29,17 @@ rabbitmq
 
 redis_connection = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
+CONNECTION_STRING = "mongodb://localhost:27017"
+mongo_client = MongoClient(CONNECTION_STRING)
+mongo_db = mongo_client['website_visitors']
+visitors_collection = mongo_db['visitors']
+
+item_1 = {
+    "ip": "192.168.0.1",
+    "timestamp": "2025.04.27 20:18"
+}
+
+visitors_collection.insert_one(item_1)
 # visitors_count = 0
 
 class RequestHandler(BaseHTTPRequestHandler):
