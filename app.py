@@ -8,9 +8,9 @@ from pymongo import MongoClient
 Написати додаток-вебсайт, який:
 
     1) Рахувати кількість відвідувачів
-    2) Виводити декілька останніх відвідувачів
+    2) Виводити декілька останніх унікальних відвідувачів
         2.1) Зберігати поточного відвідувача
-        2.2) Діставати певну кількість відвідувачів
+        2.2) Діставати певну кількість унікальних відвідувачів
 
 
 ip_address: 192.168.0.1
@@ -63,15 +63,24 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         # visitors_collection.insert_one(user_info)
 
-        visitors_collection.insert_one({
-            "ip": self.client_address[0],
-            "timestamp": str(datetime.now())
-        })
+        visitor_in_db = visitors_collection.find_one({"ip": self.client_address[0]})
+        if visitor_in_db is None:
+            visitors_collection.insert_one({
+                "ip": self.client_address[0],
+                "timestamp": str(datetime.now())
+            })
+        
 
-        visitors_cursor = visitors_collection.find().limit(5)
-        visitors_info = ""
-        for visitor in visitors_cursor:
-            visitors_info += f"<p>IP: {visitor['ip']} TIMESTAMP: {visitor['timestamp']}<p>"
+        visitors_info = redis_connection.get("visitors_info")
+        if visitors_info is None:
+            visitors_cursor = visitors_collection.find().limit(5)
+            visitors_info = ""
+            for visitor in visitors_cursor:
+                visitors_info += f"<p>IP: {visitor['ip']} TIMESTAMP: {visitor['timestamp']}<p>"
+
+            redis_connection.set("visitors_info", visitors_info)
+
+        
 
         response = f"""
             <h2>Welcome to our website!</h2>
