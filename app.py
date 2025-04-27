@@ -1,5 +1,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from json import dumps
+
+import redis
 '''
 Написати додаток-вебсайт, який:
 
@@ -13,7 +15,9 @@ mongo
 rabbitmq
 '''
 
-visitors_count = 0
+redis_connection = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+# visitors_count = 0
 
 class RequestHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server_class):
@@ -21,8 +25,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         super().__init__(request, client_address, server_class)
 
     def do_GET(self):
-        global visitors_count
-        visitors_count += 1
+        # global visitors_count
+        # visitors_count += 1
+        visitors_count = redis_connection.incr("visitors_count", amount=1)
+
         response = f"""
             <h2>Welcome to our website!</h2>
             <p>Number of visitors is <b>{visitors_count}</b>!</p>
