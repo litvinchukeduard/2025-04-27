@@ -23,3 +23,8 @@ services:
     build: .
     ports:
       - "8000:8000"
+    command: python app.py
+
+  worker:
+    build: .
+    command: python worker.py
